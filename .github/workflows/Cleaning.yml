@@ -6,29 +6,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  
-  Cleanup-Old-Releases:
-    runs-on: ubuntu-24.04
-    steps:  
-    - name: Delete Older Releases
-      uses: dev-drprasad/delete-older-releases@master
-      with:
-        keep_latest: 20
-        delete_tags: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      continue-on-error: true
-
-  Cleanup-Old-Artifacts:
-    runs-on: ubuntu-24.04
-    steps:
-    - name: Cleanup Old Action Artifacts
-      uses: c-hive/gha-remove-artifacts@master
-      with:
-          age: '3 days'
-          skip-recent: 3
-      continue-on-error: true
-        
   Cleanup-Workflow-Logs:
     runs-on: ubuntu-24.04
     steps:

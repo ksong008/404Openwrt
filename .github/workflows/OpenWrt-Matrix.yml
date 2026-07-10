@@ -342,28 +342,26 @@ jobs:
           zip ${{ env.artifact_prefix }}-$(date +%Y-%m-%d)-${{ env.latest_release }}-sfs.zip ${{ env.sfs_zip }}
           ls -Ahl
 
-      - name: Create release
+      - name: Upload firmware artifact
         if: inputs.build_firmware
-        id: create_release
-        uses: ncipollo/release-action@main
+        id: upload_firmware
+        uses: actions/upload-artifact@v4
         with:
-          name: OpenWRT-${{ env.latest_release }}
-          allowUpdates: true
-          prerelease: false
-          tag: ${{ env.latest_release }}
-          commit: "25.12"
-          replacesArtifacts: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-          artifacts: ./artifact/*.zip
+          name: ${{ env.artifact_prefix }}-${{ env.latest_release }}-${{ github.run_id }}
+          path: |
+            ./artifact/*.zip
+            ./artifact/*.sha256sum
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Print Disk Space After
         run: df -h
 
       - name: Trigger badge sync for current platform
-        if: github.workflow == 'OpenWrt-Matrix' && inputs.build_firmware && steps.create_release.outcome != 'skipped' && always()
+        if: github.workflow == 'OpenWrt-Matrix' && inputs.build_firmware && steps.upload_firmware.outcome != 'skipped' && always()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Triggering badge sync for ${{ matrix.name }} with status: ${{ steps.create_release.outcome }}"
+          echo "Triggering badge sync for ${{ matrix.name }} with status: ${{ steps.upload_firmware.outcome }}"
           gh workflow run "${{ matrix.name }}-OpenWrt.yml" \
-            --field badge_status="${{ steps.create_release.outcome }}" || echo "Failed to trigger ${{ matrix.name }} workflow"
+            --field badge_status="${{ steps.upload_firmware.outcome }}" || echo "Failed to trigger ${{ matrix.name }} workflow"
